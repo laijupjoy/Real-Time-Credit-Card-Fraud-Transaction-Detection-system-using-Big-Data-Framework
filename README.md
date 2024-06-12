@@ -251,6 +251,40 @@ Describing card_transactions table from HBase
 
 ![Picture14](https://github.com/laijupjoy/Real-Time-Credit-Card-Fraud-Transaction-Detection-system-using-Big-Data-Framework/assets/87544051/46a65bb0-b215-413e-8c8f-0724fd7ada0c)
 
+### Batch Processing tasks:
+
+### Task 7: Sqoop import member_score from AWS-RDS to Hive. (Full load import, has to be refreshed every week)
+Step1: -
+Doing sqoop import of member_score data using password encryption from Amazon RDS to HDFS and used delete target directory since it full load.
+
+hadoop credential create amazonrds.bigdataproject.password -provider jceks://hdfs/user/cloudera/amazonrds.dbpassword.jceks
+
+sqoop import \
+-Dhadoop.security.credential.provider.path=jceks://hdfs/user/cloudera/amazonrds.dbpassword.jceks \
+--connect jdbc:mysql://database-2.cl4c0rtglkdz.ap-south-1.rds.amazonaws.com/BankingPrj \
+--username admin \
+--password-alias amazonrds.bigdataproject.password \
+--table member_score \
+-- target -dir /project_input_data/member_score \
+--delete-target-dir
+
+
+select count(*) from bigdataproject.member_score;
+
+![Picture15](https://github.com/laijupjoy/Real-Time-Credit-Card-Fraud-Transaction-Detection-system-using-Big-Data-Framework/assets/87544051/66435506-f67b-4bcf-9077-dcf62d7da4fc)
+
+Step2: -
+Production ready parameterized Sqoop import Shell Script(password encrypted) for Amazon RDS member_score table
+
+![Picture16](https://github.com/laijupjoy/Real-Time-Credit-Card-Fraud-Transaction-Detection-system-using-Big-Data-Framework/assets/87544051/da2465ac-d63e-4a7c-8985-ba5397d80926)
+
+Step3: -
+Providing permission and execution command for sqoop import shell script
+chmod +x sqoop_import_member_score.sh
+
+Shell execution command:-
+./sqoop_import_member_score.sh database-2.cl4c0rtglkdz.ap-south-1.rds.amazonaws.com BankingPrj admin member_score
+
 
 
 
