@@ -225,6 +225,35 @@ Describing card_transactions table from HBase
 
 ![Picture12](https://github.com/laijupjoy/Real-Time-Credit-Card-Fraud-Transaction-Detection-system-using-Big-Data-Framework/assets/87544051/c2549062-07d0-42c0-9d26-e4a6ec4d2b77)
 
+#### Task 6: Create a Hbase “lookup” table with columns — member_id, card_id, UCL, timestamp, zipcode, credit_score.
+
+Step1:- Creating Hive-HBase table table card_lookup with 8 buckets on column:-card_id since query/join with this table is based on card_id.
+
+create table card_lookup
+ (
+card_id bigint ,
+member_id bigint ,
+ucl float ,
+score float,
+last_txn_time timestamp,
+last_txn_zip string 
+)
+CLUSTERED by (card_id) into 8 buckets
+STORED BY 'org.apache.hadoop.hive.hbase.HBaseStorageHandler' 
+WITH SERDEPROPERTIES("hbase.columns.mapping"=":key,lkp_data:ucl,lkp_data:score, lkp_data:last_txn_time,lkp_data:last_txn_zip")
+TBLPROPERTIES ("hbase.table.name" = "card_lookup");
+
+Describing card_ lookup table from hive
+
+![Picture13](https://github.com/laijupjoy/Real-Time-Credit-Card-Fraud-Transaction-Detection-system-using-Big-Data-Framework/assets/87544051/baa95b12-aa64-497e-961d-9a1e42f78058)
+
+Describing card_transactions table from HBase
+
+![Picture14](https://github.com/laijupjoy/Real-Time-Credit-Card-Fraud-Transaction-Detection-system-using-Big-Data-Framework/assets/87544051/46a65bb0-b215-413e-8c8f-0724fd7ada0c)
+
+
+
+
 
 
 
