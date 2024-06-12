@@ -115,6 +115,118 @@ hadoop fs -rm /project_input_data/card_transactions.csv
 
 ![Picture8](https://github.com/laijupjoy/Real-Time-Credit-Card-Fraud-Transaction-Detection-system-using-Big-Data-Framework/assets/87544051/b779a5e1-a5f6-4568-8f2f-e1a4db6885bd)
 
+#### Task 4: On “member_score” and “member_details” create a normal hive external table.
+Step1: -
+Enter to Hive Beeline Terminal
+beeline -u jdbc:hive2://
+
+Create database in Hive 
+create database bigdataproject;
+use database bigdataproject;
+
+Create hive external table- member_score 
+
+create external table if not exists member_score 
+(
+ member_id string,
+ score float
+)
+row format delimited fields terminated by ',' 
+stored as textfile 
+location '/project_input_data/member_score/';
+
+Step2: -
+Create hive external table- member_details 
+
+create external table if not exists member_details 
+(
+card_id bigint,
+member_id bigint,
+member_joining_dt timestamp ,
+card_purchase_dt timestamp ,
+country string,
+city string,
+score float
+)
+row format delimited fields terminated by ',' 
+stored as textfile 
+location '/project_input_data/member_details/';
+
+Describe member_score;
+
+![Picture9](https://github.com/laijupjoy/Real-Time-Credit-Card-Fraud-Transaction-Detection-system-using-Big-Data-Framework/assets/87544051/32a3d290-6faf-454b-a6bf-020dff3023e1)
+
+Describe member_details;
+
+![Picture10](https://github.com/laijupjoy/Real-Time-Credit-Card-Fraud-Transaction-Detection-system-using-Big-Data-Framework/assets/87544051/fc45930a-e722-4ca5-bab6-cd89c3eb0df8)
+
+Step3: -
+
+Enabling bucketing:- 
+SET HIVE.ENFORCE.BUCKETING=TRUE;
+
+Create hive bucketed table- member_score with 4 Buckets on column:- member_id since query/join with this table is based on card_id
+
+create table if not exists member_score_bucketed
+(
+ member_id string,
+ score float
+)
+CLUSTERED BY (member_id) into 4 buckets;
+
+Step4: -
+Create hive bucketed table- member_details with 4 Buckets on column:- card_id since query/join with this table is based on card_id
+
+create table if not exists member_details_bucketed
+(
+card_id bigint,
+member_id bigint,
+member_joining_dt timestamp ,
+card_purchase_dt timestamp ,
+country string,
+city string,
+score float
+)
+CLUSTERED BY (card_id) into 4 buckets;
+
+
+Step5: -
+Loading bucketed tables member_score_bucketed and member_details_bucketed from external tables
+
+insert into table member_score_bucketed
+select * from member_score;
+
+insert into table member_details_bucketed
+select * from member_details;
+
+#### Task 5: Create a special “card_transactions” Hbase table managed by Hive.
+Step1:- Creating Hive-HBase table table card_transactions with 8 buckets on column:-card_id since query/join with this table is based on card_id.
+
+create table card_transactions 
+(
+card_id bigint,
+member_id bigint,
+amount float,
+postcode int,
+pos_id bigint,
+transaction_dt timestamp,
+status string
+)
+CLUSTERED by (card_id) into 8 buckets
+STORED BY 'org.apache.hadoop.hive.hbase.HBaseStorageHandler' 
+WITH SERDEPROPERTIES("hbase.columns.mapping"=":key,trans_data:member_id,trans_data:amount, trans_data:postcode,trans_data:pos_id,trans_data:transaction_dt,trans_data:Status")
+TBLPROPERTIES ("hbase.table.name" = "card_transactions");
+
+Describing card_transactions table from hive
+
+![Picture11](https://github.com/laijupjoy/Real-Time-Credit-Card-Fraud-Transaction-Detection-system-using-Big-Data-Framework/assets/87544051/ea0658bc-f6f6-49bb-8dce-3555fd3a40dc)
+
+Describing card_transactions table from HBase
+
+![Picture12](https://github.com/laijupjoy/Real-Time-Credit-Card-Fraud-Transaction-Detection-system-using-Big-Data-Framework/assets/87544051/c2549062-07d0-42c0-9d26-e4a6ec4d2b77)
+
+
+
 
 
 
