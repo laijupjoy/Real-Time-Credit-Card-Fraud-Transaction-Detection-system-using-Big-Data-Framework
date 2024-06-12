@@ -276,14 +276,145 @@ select count(*) from bigdataproject.member_score;
 Step2: -
 Production ready parameterized Sqoop import Shell Script(password encrypted) for Amazon RDS member_score table
 
-![Picture16](https://github.com/laijupjoy/Real-Time-Credit-Card-Fraud-Transaction-Detection-system-using-Big-Data-Framework/assets/87544051/da2465ac-d63e-4a7c-8985-ba5397d80926)
-
 Step3: -
 Providing permission and execution command for sqoop import shell script
 chmod +x sqoop_import_member_score.sh
 
 Shell execution command:-
 ./sqoop_import_member_score.sh database-2.cl4c0rtglkdz.ap-south-1.rds.amazonaws.com BankingPrj admin member_score
+
+#### Task 8:Sqoop import member_details from AWS-RDS to Hive. (Incremental load import in append mode based on member_id for every 8hrs)
+
+Step1: -
+Doing sqoop import of member_details data using password encryption from Amazon RDS to HDFS using incremental append mode based on column:- member_id
+
+We can reuse the password encryption file created for member_score table for member_details too
+
+sqoop import \
+-Dhadoop.security.credential.provider.path=jceks://hdfs/user/cloudera/amazonrds.dbpassword.jceks \
+--connect jdbc:mysql://database-2.cl4c0rtglkdz.ap-south-1.rds.amazonaws.com/BankingPrj \
+--username admin \
+--password-alias amazonrds.bigdataproject.password \
+--table member_details \
+--warehouse-dir /project_input_data \
+--incremental append \
+--check-column member_id \
+--last-value 0
+
+
+select count(*) from bigdataproject.member_details;
+
+![Picture17](https://github.com/laijupjoy/Real-Time-Credit-Card-Fraud-Transaction-Detection-system-using-Big-Data-Framework/assets/87544051/293d19b6-ec65-4e99-a9d2-61dcf8795d89)
+
+Step2: -
+Production ready parameterized Sqoop import Shell Script(password encrypted) for Amazon RDS member_details table
+
+Step3: -
+Providing permission and execution command for sqoop import shell script
+chmod +x sqoop_import_member_details.sh
+
+Shell execution command:-
+./sqoop_import_member_score.sh database-2.cl4c0rtglkdz.ap-south-1.rds.amazonaws.com BankingPrj admin member_details
+
+#### Task 9: Sqoop import card_transactions to HDFS from MySQL. (This is a one-time full load activity. The card_transactions table will be updated with new transactions while in streaming mode.)
+
+Step1: -
+Doing sqoop import of card_transactions data using password encryption from MYSQL to HDFS
+
+sqoop import \
+-Dhadoop.security.credential.provider.path=jceks://hdfs/user/cloudera/mysql.dbpassword.jceks \
+--connect jdbc:mysql://quickstart.cloudera:3306/bigdataproject \
+--username root \
+--password-alias mysql.bigdataproject.password \
+--table card_transactions  \
+--split-by card_id \
+--warehouse-dir /project_input_data \
+
+
+hadoop fs -ls /project_input_data/card_transactions
+
+![Picture19](https://github.com/laijupjoy/Real-Time-Credit-Card-Fraud-Transaction-Detection-system-using-Big-Data-Framework/assets/87544051/3dd7c369-a245-4dd7-a98c-f0a655c0369d)
+
+Step2: - 
+Production ready parameterized Sqoop import Shell Script(password encrypted) for MYSQL card_transactions table
+
+Step3: -
+Providing permission and execution command for sqoop import shell script
+chmod +x sqoop_import_card_txns.sh
+
+Shell execution command:-
+./sqoop_import_card_txns.sh quickstart.cloudera:3306 bigdataproject root card_transactions
+
+#### Task 13 & 14 Combined: Spark-Hive Integration for spark stream processing & Access the hive tables using apache spark and calculate the UCL.
+
+Step1: -
+Access the hive tables using apache spark and calculate the UCL.
+
+import org.apache.spark.sql.{Row, SaveMode, SparkSession}
+import org.apache.log4j.Logger
+import org.apache.log4j.Level
+import org.apache.spark.SparkConf
+object HiveTest extends App{
+//set logging level to error
+  Logger.getLogger("org").setLevel(Level.ERROR)
+ // create spark config object
+  val sparkConf= new SparkConf()
+  sparkConf.setAppName("Credit_Card_Fraud_Detection")
+  sparkConf.setMaster("local[2]")
+  sparkConf.set("hive.metastore.uris", "thrift://localhost:9083")  
+  // use spark config object to create spark session
+  val spark = SparkSession
+  .builder()
+  .config(sparkConf)
+  .enableHiveSupport() //spark integration with hive
+  .getOrCreate()
+	import spark.implicits._
+	import spark.sql	
+	
+
+// start writing the hive queries
+	val df_ucl=sql("""
+	with cte_rownum as
+	(
+		select card_id,amount,member_id, 
+		first_value(postcode) over(partition by card_id order by transcation_dt desc) as postcode,
+		row_number() over(partition by card_id order by transcation_dt desc) rownum
+		from card_transactions
+	)
+	select card_id,member_id,
+			avg(amount)+ 3* max(std) as UCL ,
+			max(score) score,
+			max(transaction_dt) as last_txn_time,
+			max(Postcode)as last_txn_zip	
+			 from
+			(
+				select
+				card_id,amount,
+				c.member_id,
+				m.score,
+				transaction_dt,
+				Postcode,
+				STDDEV (amount) over(partition by card_id order by (select 1)  desc) std
+				from cte_rownum c
+				inner join member_score m on c.member_id=m.member_id 
+				where rownum<=10
+			)a
+	group by card_id,member_id
+	""" )
+	val df=df_ucl.select("card_id","member_id","UCL","score","last_txn_time","last_txn_zip")
+	df.show
+
+}
+
+
+
+
+
+
+
+
+
+
 
 
 
