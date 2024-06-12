@@ -25,7 +25,7 @@ hadoop fs -cat project_input_data/card_transactions.csv | wc -l
 
 ![Move file from windows Desktop Shared to Cloudera](https://github.com/laijupjoy/Real-Time-Credit-Card-Fraud-Transaction-Detection-system-using-Big-Data-Framework/assets/87544051/e2d55add-ad59-4cac-acf6-bc96f0ea6b8c)
 
-#### Table creation tasks :
+### Table creation tasks :
 
 #### Task 2: Create the “card_transactions” table in MySQL based on the card_transactions.csv file structure.
 Step1: -
@@ -74,6 +74,49 @@ PRIMARY KEY (card_id ,transaction_dt)
 Describe card_transactions;
 
 ![Picture5](https://github.com/laijupjoy/Real-Time-Credit-Card-Fraud-Transaction-Detection-system-using-Big-Data-Framework/assets/87544051/0195df7d-31c2-45f0-a410-267fd83e8773)
+
+#### Task 3: Do a sqoop export to the database for card_transactions.csv and delete the file from HDFS.
+Step1: -
+
+Doing sqoop export of card_transactions data using password encryption from HDFS to MYSQL(staging table)
+
+hadoop credential create mysql.bigdataproject.password -provider jceks://hdfs/user/cloudera/mysql.dbpassword.jceks
+
+sqoop export \
+-Dhadoop.security.credential.provider.path=jceks://hdfs/user/cloudera/mysql.dbpassword.jceks \
+--connect jdbc:mysql://quickstart.cloudera:3306/bigdataproject \
+--username root \
+--password-alias mysql.bigdataproject.password \
+--table stg_card_transactions  \
+--export-dir project_input_data/card_transactions.csv \
+--fields-terminated-by ','
+
+select count(*) from bigdataproject.stg_card_transactions;
+
+![Picture6](https://github.com/laijupjoy/Real-Time-Credit-Card-Fraud-Transaction-Detection-system-using-Big-Data-Framework/assets/87544051/4b2c2297-3aea-464b-bf48-a38ee2e69f32)
+
+step 2:
+Transferring data from stg_card_transactions to card_transactions
+
+insert into card_transactions select card_id,member_id,amount,postcode,pos_id, STR_TO_DATE(transaction_dt,'%d-%m-%Y %H:%i:%s') as transaction_dt,status  from stg_card_transactions
+
+![Picture7](https://github.com/laijupjoy/Real-Time-Credit-Card-Fraud-Transaction-Detection-system-using-Big-Data-Framework/assets/87544051/b76f9f6b-3c10-4175-830c-ef98ab38915d)
+
+Step3: -
+Providing permission and execution command for sqoop import shell script
+chmod +x sqoop_export_card_transactions.sh
+
+Shell execution command:-
+./sqoop_export_card_transactions.sh quickstart.cloudera:3306 bigdataproject root card_transactions
+
+Step4: -
+Deleting the file from HDFS
+hadoop fs -rm /project_input_data/card_transactions.csv
+
+![Picture8](https://github.com/laijupjoy/Real-Time-Credit-Card-Fraud-Transaction-Detection-system-using-Big-Data-Framework/assets/87544051/b779a5e1-a5f6-4568-8f2f-e1a4db6885bd)
+
+
+
 
 
 
