@@ -36,7 +36,7 @@ Task 10: Schedule a sqoop import job using Airflow to import member_score from A
 
 Task 11: Schedule a sqoop import job using Airflow to import member_details from AWS-RDS to Hive on an incremental append mode for every 8hrs.
 
-Integration tasks:
+#### Integration tasks:
 
 Task 12: Spark-HBase Integration
 
