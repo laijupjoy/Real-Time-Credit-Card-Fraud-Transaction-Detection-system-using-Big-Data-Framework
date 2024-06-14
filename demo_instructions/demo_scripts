@@ -1,0 +1,199 @@
+Step1:-
+
+hadoop fs -mkdir project_input_data
+hadoop fs -put Desktop/card_transactions_orig.csv project_input_data/
+hadoop fs -cat project_input_data/card_transactions_orig.csv | wc -l
+
+
+
+Step2:-Run in mysql
+
+create table stg_card_transactions (
+card_id bigint,
+member_id bigint,
+amount int,
+postcode int,
+pos_id bigint,
+transaction_dt varchar(255),
+status varchar(50)
+);
+
+create table card_transactions (
+card_id bigint,
+member_id bigint,
+amount int,
+postcode int,
+pos_id bigint,
+transaction_dt datetime,
+status varchar(50),
+PRIMARY KEY(card_id, transaction_dt)
+);
+
+
+
+Step3:- Airflow
+
+Run Sqoop Export Card_txns from Airflow
+
+--Verify count
+select count(*) from stg_card_transactions;
+
+--Remove Dups from Stg Table
+alter ignore table stg_card_transactions
+add unique index idx_card_txns (card_id,transaction_dt);
+
+--Verify no dups
+select card_id,transaction_dt,count(*) from stg_card_transactions group by card_id,transaction_dt having count(*) >1;
+
+--Dropping index used for removing dups
+alter table stg_card_transactions drop index idx_card_txns;
+
+--Loading main table
+insert into card_transactions 
+select card_id,member_id,amount,postcode,pos_id,STR_TO_DATE(transaction_dt,'%d-%m-%Y %H:%i:%s'),status from stg_card_transactions;
+commit;
+
+--Verify the count
+select count(*) from card_transactions;
+
+
+
+Step4:-Run in Hive
+SET HIVE.ENFORCE.BUCKETING=TRUE;
+
+create external table if not exists member_score 
+(
+ member_id string,
+ score float
+)
+row format delimited fields terminated by ',' 
+stored as textfile 
+location '/project_input_data/member_score/';
+
+create external table if not exists member_details 
+(
+card_id bigint,
+member_id bigint,
+member_joining_dt timestamp ,
+card_purchase_dt timestamp ,
+country string,
+city string,
+score float
+)
+row format delimited fields terminated by ',' 
+stored as textfile 
+location '/project_input_data/member_details/';
+
+create table if not exists member_score_bucketed
+(
+ member_id string,
+ score float
+)
+CLUSTERED BY (member_id) into 4 buckets;
+
+create table if not exists member_details_bucketed
+(
+card_id bigint,
+member_id bigint,
+member_joining_dt timestamp ,
+card_purchase_dt timestamp ,
+country string,
+city string,
+score float
+)
+CLUSTERED BY (card_id) into 4 buckets;
+
+
+
+Step5:-Run in Hive
+
+create external table if not exists card_transactions (
+card_id bigint,
+member_id bigint,
+amount float,
+postcode int,
+pos_id bigint,
+transaction_dt timestamp,
+status string
+)
+row format delimited fields terminated by ',' 
+stored as textfile 
+location '/project_input_data/card_transactions/';
+
+create table card_transactions_bucketed
+(
+cardid_txnts string,
+card_id bigint,
+member_id bigint,
+amount float,
+postcode int,
+pos_id bigint,
+transaction_dt timestamp,
+status string
+)
+CLUSTERED by (card_id) into 8 buckets
+STORED BY 'org.apache.hadoop.hive.hbase.HBaseStorageHandler' 
+WITH SERDEPROPERTIES("hbase.columns.mapping"=":key,trans_data:card_id,trans_data:member_id,trans_data:amount, trans_data:postcode,trans_data:pos_id,trans_data:transaction_dt,trans_data:Status")
+TBLPROPERTIES ("hbase.table.name" = "card_transactions");
+
+
+
+Step6:-Run in Hive
+create table card_lookup
+(
+member_id bigint,
+card_id bigint ,
+ucl float ,
+score float,
+last_txn_time timestamp,
+last_txn_zip string 
+)
+CLUSTERED by (card_id) into 8 buckets
+STORED BY 'org.apache.hadoop.hive.hbase.HBaseStorageHandler' 
+WITH SERDEPROPERTIES("hbase.columns.mapping"=":key,lkp_data:member_id,lkp_data:ucl,lkp_data:score, lkp_data:last_txn_time,lkp_data:last_txn_zip")
+TBLPROPERTIES ("hbase.table.name" = "card_lookup");
+
+
+
+Step7/10:-Airflow
+
+Run Member_Score Airflow Job
+
+--Inserting into member_score_bucketed table
+insert into table member_score_bucketed
+select * from member_score;
+
+
+
+Step8/11:-Airflow
+
+Run Member_Details Airflow Job
+
+--Inserting into member_details_bucketed table
+insert into table member_details_bucketed
+select * from member_details;
+
+
+
+Step9:-Airflow
+
+Run card_transactions Import Airflow Job
+
+--Load card_txns_bucketed table with concatenated row key
+insert into table card_transactions_bucketed
+select concat_ws('~',cast(card_id as string),cast(transaction_dt as string)) as cardid_txnts,card_id,member_id,amount,postcode,pos_id,transaction_dt,status
+from card_transactions;
+
+--Search functionality based on rowkey
+scan 'card_transactions', {FILTER => "(PrefixFilter('340028465709212')"}
+
+
+
+Step12/13/14:- Run Integration_code.scala optimized scala code from Eclipse
+
+--Verify lookup table data from HBase
+scan 'card_lookup'
+
+--Verify lookup table data from Hive
+select * from card_lookup limit 5;
+

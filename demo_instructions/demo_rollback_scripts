@@ -1,0 +1,48 @@
+Step1:-
+
+--Removing card_txns hdfs directory
+hadoop fs -rm -R project_input_data
+--Removing Sqoop Import directory
+hadoop fs -rm -R /project_input_data
+
+
+
+
+Step2:-Run in mysql
+
+drop table bigdataproject.stg_card_transactions;
+drop table bigdataproject.card_transactions;
+
+
+
+Step4:-Run in Hive
+
+drop table bigdataproject.member_score;
+drop table bigdataproject.member_details;
+drop table bigdataproject.member_score_bucketed;
+drop table bigdataproject.member_details_bucketed;
+
+
+
+Step5:-Run in Hive
+
+drop table bigdataproject.card_transactions;
+
+--Run in command shell
+service --status-all
+sudo service hbase-master restart
+sudo service hbase-regionserver restart
+
+--Run in HBase Shell
+disable 'card_transactions'
+drop 'card_transactions'
+
+
+
+Step6:-Run in HBase Shell
+disable 'card_lookup'
+drop 'card_lookup'
+
+
+
+
