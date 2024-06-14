@@ -1,7 +1,7 @@
 # Real-Time-Credit-Card-Fraud-Transaction-Detection-system-using-Big-Data-Framework
 Here, implementing a credit card fraud detection system, by using big data technologies, like Hadoop, Spark, Apache Kafka
 
-## SYSTEM ARCHITECTURE
+## System Architecture
 
 ![architecture](https://github.com/laijupjoy/Real-Time-Credit-Card-Fraud-Transaction-Detection-system-using-Big-Data-Framework/assets/87544051/1b5faf69-68bf-4016-a68e-e0a61f3c2ad3)
 
