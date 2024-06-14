@@ -4,7 +4,7 @@ Here, implementing a credit card fraud detection system, by using big data techn
 Reference:https://ijarsct.co.in/Paper8040.pdf
 
 ## Project Implementation tasks
-~~~
+
 Task 1: Copy “card_transactions.csv” file from local system to HDFS. 
 
 Table creation tasks :
@@ -48,7 +48,7 @@ Task 19: Based on the above rules, the entire transaction along with status shou
 Task 20: Schedule a job for validating rules by comparing the incoming data from the POS terminals in JSON format with the values in the lookup table.
 Task 21: If the transaction was marked genuine, then we need to update the lookup table with the new timestamp and the zipcode.
 Task 22: Schedule a job for populating the lookup table
-~~~
+
 
 ### Task 1: Copy “card_transactions.csv” file from local system to HDFS.
 Move file from windows Desktop/Shared to Cloudera Desktop/Shared using Shared folder
