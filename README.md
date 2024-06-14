@@ -5,6 +5,9 @@ Here, implementing a credit card fraud detection system, by using big data techn
 
 ![architecture](https://github.com/laijupjoy/Real-Time-Credit-Card-Fraud-Transaction-Detection-system-using-Big-Data-Framework/assets/87544051/1b5faf69-68bf-4016-a68e-e0a61f3c2ad3)
 
+## Block Diagram
+
+![Screenshot 2024-06-14 230119](https://github.com/laijupjoy/Real-Time-Credit-Card-Fraud-Transaction-Detection-system-using-Big-Data-Framework/assets/87544051/e015da1a-d3af-4ee7-b15a-eb94a0f72de1)
 
 ## Project Implementation tasks
 
