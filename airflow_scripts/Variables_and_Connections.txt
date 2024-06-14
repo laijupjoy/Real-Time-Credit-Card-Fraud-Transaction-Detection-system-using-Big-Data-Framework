@@ -1,0 +1,9 @@
+--Variables
+memberscore_shell_command ./sqoop_import_member_score.sh database-2.cl4c0rtglkdz.ap-south-1.rds.amazonaws.com BankingPrj admin member_score 
+memberdetails_shell_command ./sqoop_import_member_details.sh database-2.cl4c0rtglkdz.ap-south-1.rds.amazonaws.com BankingPrj admin member_details
+card_txns_export_shell_command ./sqoop_export_card_txns.sh quickstart.cloudera:3306 bigdataproject root stg_card_transactions 
+card_txns_import_shell_command ./sqoop_import_card_txns.sh quickstart.cloudera:3306 bigdataproject root card_transactions 
+
+--connections
+cloudera SSH quickstart.cloudera cloudera cloudera
+
