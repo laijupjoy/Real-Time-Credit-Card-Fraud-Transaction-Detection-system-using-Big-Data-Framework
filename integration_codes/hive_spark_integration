@@ -1,0 +1,53 @@
+import org.apache.spark.sql.{Row, SaveMode, SparkSession}
+import org.apache.log4j.Logger
+import org.apache.log4j.Level
+import org.apache.spark.SparkConf
+
+object HiveTest extends App
+{
+//set looging level to error
+  Logger.getLogger("org").setLevel(Level.ERROR)
+
+ // create spark config object
+  val sparkConf= new SparkConf()
+  sparkConf.setAppName("Credit_Card_Fraud_Detection")
+  sparkConf.setMaster("local[2]")
+  sparkConf.set("hive.metastore.uris", "thrift://localhost:9083")
+  
+  // use sparkconfig object to create spark session
+  val spark = SparkSession
+  .builder()
+  .config(sparkConf)
+  .enableHiveSupport() //spark integration with hive
+  .getOrCreate()
+
+	import spark.implicits._
+	import spark.sql
+	
+	// start writing the hive queries
+	val df_ucl=sql("""
+
+	with cte_rownum as
+	(
+		select card_id,amount,
+		row_number() over(partition by card_id order by CAST(UNIX_TIMESTAMP(transcation_dt, 'dd-MM-yyyy HH:mm:ss') AS TIMESTAMP) desc) rownum
+		from card_transactions
+	)
+	select card_id,
+			avg(amount)+ 3* max(std) as UCL ,
+			avg(amount) as Avg_amount ,
+			max(std) as Std_deviation from
+			(
+				select
+				card_id,amount,
+				STDDEV (amount) over(partition by card_id order by (select 1)  desc) std
+				from cte_rownum
+				where rownum<=10
+			)a
+	group by card_id
+	""" )
+	val df=df_ucl.select("card_id", "UCL")
+	df.show
+
+}
+
