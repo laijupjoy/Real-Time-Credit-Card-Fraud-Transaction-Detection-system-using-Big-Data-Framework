@@ -7,7 +7,7 @@ Here, implementing a credit card fraud detection system, by using big data techn
 
 ## Block Diagram
 
-![Screenshot 2024-06-14 230119](https://github.com/laijupjoy/Real-Time-Credit-Card-Fraud-Transaction-Detection-system-using-Big-Data-Framework/assets/87544051/e015da1a-d3af-4ee7-b15a-eb94a0f72de1)
+![Screenshot 2024-06-14 230119](https://github.com/laijupjoy/Real-Time-Credit-Card-Fraud-Transaction-Detection-system-using-Big-Data-Framework/assets/87544051/07dbc591-dd15-4939-abb9-a17fca7b39e5)
 
 ## Project Implementation tasks
 
@@ -64,8 +64,6 @@ Task 18: Processing in Spark Streaming -
    1 : Validating RULE 1 -> “credit_score > 200”
    
    2 : Validating RULE 2 -> “transaction amount <= UCL”
-   
-   3 : Validating RULE 3 -> “zipcode distance within threshold”
 
 Task 19: Based on the above rules, the entire transaction along with status should be updated in the card_transactions table.
 
