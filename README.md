@@ -43,9 +43,9 @@ Task 11: Schedule a sqoop import job using Airflow to import member_details from
 
 Task 12: Spark-HBase Integration
 
-   1: For populating the card_transactions table.
-   
-   2: For populating the look_up table.
+	1: For populating the card_transactions table.
+
+	2: For populating the look_up table.
    
 Task 13: Spark-Hive Integration for spark stream processing.
 
@@ -61,9 +61,9 @@ Task 17: Retrieve the timestamp and zipcode of the last transaction of each card
 
 Task 18: Processing in Spark Streaming -
 
-   1 : Validating RULE 1 -> “credit_score > 200”
+	1 : Validating RULE 1 -> “credit_score > 200”
    
-   2 : Validating RULE 2 -> “transaction amount <= UCL”
+	2 : Validating RULE 2 -> “transaction amount <= UCL”
 
 Task 19: Based on the above rules, the entire transaction along with status should be updated in the card_transactions table.
 
